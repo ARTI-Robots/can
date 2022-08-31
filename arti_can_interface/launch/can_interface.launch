@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="device_name"/>
+  <arg name="dump_file_name" default=""/>
+  <arg name="command_file_name" default=""/>
+  <arg name="separator" default=";"/>
+  <arg name="command_interval" default="0.1"/>
+
+  <node name="can_interface" pkg="arti_can_interface" type="arti_can_interface_node" output="screen">
+    <param name="device_name" type="str" value="$(arg device_name)"/>
+    <param name="dump_file_name" type="str" value="$(arg dump_file_name)"/>
+    <param name="command_file_name" type="str" value="$(arg command_file_name)"/>
+    <param name="separator" type="str" value="$(arg separator)"/>
+    <param name="command_interval" type="double" value="$(arg command_interval)"/>
+  </node>
+
+</launch>
