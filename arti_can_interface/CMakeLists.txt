@@ -76,6 +76,8 @@ add_library(${PROJECT_NAME}
   src/can_interface.cpp include/arti_can_interface/can_interface.h
   src/can_message_formatter.cpp include/arti_can_interface/can_message_formatter.h
   src/lely_can_interface.cpp include/arti_can_interface/lely_can_interface.h
+  src/can_data_reader.cpp include/arti_can_interface/can_data_reader.h
+  src/can_data_writer.cpp include/arti_can_interface/can_data_writer.h
 )
 
 ## Add cmake target dependencies of the library
