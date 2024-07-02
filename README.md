@@ -158,6 +158,30 @@ uint32_t id = 0x185;
 can_interface->sendMessage(id, data);
 ```
 
+As an alternative one can also use the helper class `CanDataWriter`:
+```cpp
+// Create the CAN interface for a specific device:
+std::string device_name = "vcan0";
+arti_can_interface::CanInterfacePtr can_interface = CanInterface::createCanInterface(device_name);
+
+// Prepare the message data:
+arti_can_interface::CanDataWriter::Buffer data;
+arti_can_interface::CanDataWriter writer{data};
+writer.writeUnsignedInt8(1);
+writer.writeUnsignedInt8(2);
+writer.writeUnsignedInt8(3);
+
+// Write more complicated data types
+writer.writeUnsignedInt16(1234);
+writer.writeFloatAsInt16(5678.9);
+
+// Use the specified id for the CAN message:
+uint32_t id = 0x185;
+
+// Send the message:
+can_interface->sendMessage(id, data);
+```
+
 
 ## Receiving CAN messages
 
@@ -193,6 +217,46 @@ void canMessageCB(const arti_can_msgs::CanMessageConstPtr& can_message)
 }
 ```
 
+As an alternative one can also use the helper class `CanDataReader`:
+```cpp
+// Create the CAN interface for a specific device:
+std::string device_name = "vcan0";
+arti_can_interface::CanInterfacePtr can_interface = CanInterface::createCanInterface(device_name);
+
+// The CAN id we're interested in:
+uint32_t id = 0x185;
+
+// Subscribe to messages with the given id:
+can_interface->subscribe(id, &canMessageCB);
+
+...
+
+// An example callback:
+void canMessageCB(const arti_can_msgs::CanMessageConstPtr& can_message)
+{
+  ROS_INFO_STREAM("id: " << can_message->id);
+  ROS_INFO_STREAM("extended_id: " << static_cast<int>(can_message->extended_id));
+  ROS_INFO_STREAM("rtr: " << static_cast<int>(can_message->rtr));
+  ROS_INFO_STREAM("extended_data_length: " << static_cast<int>(can_message->extended_data_length));
+  ROS_INFO_STREAM("bit_rate_switch: " << static_cast<int>(can_message->bit_rate_switch));
+  ROS_INFO_STREAM("error_state_indicator: " << static_cast<int>(can_message->error_state_indicator));
+
+  for (const uint8_t data : can_message->data)
+  {
+    ROS_INFO_STREAM("new byte received: " << static_cast<int>(data));
+  }
+
+  arti_can_interface::CanDataReader payload_reader(can_message->data.begin(), can_message->data.end());
+
+  auto first_byte = payload_reader.readUnsignedInt8();
+  auto second_byte = payload_reader.readUnsignedInt8();
+  auto third_byte = payload_reader.readUnsignedInt8();
+
+  // Read more complicated data types
+  auto fourth_and_fifth_byte = payload_reader.readUnsignedInt16();
+  auto sixth_and_seventh_byte = payload_reader.readInt16AsFloat();
+}
+```
 
 ## License
 
