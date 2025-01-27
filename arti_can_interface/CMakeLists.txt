@@ -7,6 +7,7 @@ project(arti_can_interface)
 find_package(catkin REQUIRED COMPONENTS
   arti_can_msgs
   roscpp
+  spdlog_ros
 )
 
 ## System dependencies are found with CMake's conventions

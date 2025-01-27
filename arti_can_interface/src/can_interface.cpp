@@ -5,6 +5,7 @@
 #include <boost/make_shared.hpp>
 #include <ros/console.h>
 #include <utility>
+#include <spdlog_ros/logging.hpp>
 
 namespace arti_can_interface
 {
@@ -111,7 +112,7 @@ void CanInterface::callMessageCallbackSafely(
 {
   if (!message_callback)
   {
-    ROS_WARN_STREAM("found invalid CAN message callback");
+    SPDLOG_ROS_WARN_STREAM("found invalid CAN message callback");
   }
   else
   {
@@ -121,11 +122,11 @@ void CanInterface::callMessageCallbackSafely(
     }
     catch (const std::exception& ex)
     {
-      ROS_WARN_STREAM("exception in CAN message callback: " << ex.what());
+      SPDLOG_ROS_WARN_STREAM("exception in CAN message callback: " << ex.what());
     }
     catch (...)
     {
-      ROS_WARN_STREAM("exception in CAN message callback");
+      SPDLOG_ROS_WARN_STREAM("exception in CAN message callback");
     }
   }
 }

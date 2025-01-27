@@ -15,12 +15,15 @@
 
   <build_depend>arti_can_msgs</build_depend>
   <build_depend>roscpp</build_depend>
+  <build_depend>spdlog_ros</build_depend>
 
   <build_export_depend>arti_can_msgs</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
+  <build_export_depend>spdlog_ros</build_export_depend>
 
   <exec_depend>arti_can_msgs</exec_depend>
   <exec_depend>roscpp</exec_depend>
+  <exec_depend>spdlog_ros</exec_depend>
 
   <export>
   </export>

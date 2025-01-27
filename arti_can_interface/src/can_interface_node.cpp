@@ -1,6 +1,8 @@
 #include <arti_can_interface/can_interface_node.h>
 #include <arti_can_interface/can_message_formatter.h>
 #include <ctime>
+#include <spdlog_ros/logging.hpp>
+#include <spdlog_ros/ros_sink.hpp>
 
 namespace arti_can_interface
 {
@@ -17,14 +19,18 @@ CanInterfaceNode::CanInterfaceNode(const ros::NodeHandle& node_handle)
     can_message_publisher_(node_handle_.advertise<arti_can_msgs::CanMessage>("rx", 10)),
     can_interface_(CanInterface::createCanInterface(device_name_))
 {
-  ROS_INFO_STREAM("using connection to device: '" << device_name_ << "'");
+  auto ros_sink = std::make_shared<spdlog_ros::RosSink>(node_handle_);
+  auto logger = spdlog_ros::CreateAsyncLogger("CanInterfaceNode", {ros_sink});
+  logger->set_level(SPDLOG_ROS_LEVEL_DEBUG);
+  spdlog::set_default_logger(logger);
+  SPDLOG_ROS_INFO_STREAM("using connection to device: '" << device_name_ << "'");
 
   if (!dump_file_name_.empty())
   {
     dump_file_stream_.open(dump_file_name_, std::ios_base::out | std::ios_base::app);
     if (dump_file_stream_)
     {
-      ROS_INFO_STREAM("appending to file '" << dump_file_name_ << "'");
+      SPDLOG_ROS_INFO_STREAM("appending to file '" << dump_file_name_ << "'");
       char datetime[32] = "";
       const time_t now = time(nullptr);
       strftime(datetime, sizeof(datetime), "%FT%T%z", localtime(&now));
@@ -33,7 +39,7 @@ CanInterfaceNode::CanInterfaceNode(const ros::NodeHandle& node_handle)
     }
     else
     {
-      ROS_ERROR_STREAM("file '" << dump_file_name_ << "' could not be opened for appending");
+      SPDLOG_ROS_ERROR_STREAM("file '" << dump_file_name_ << "' could not be opened for appending");
     }
   }
 
@@ -42,13 +48,13 @@ CanInterfaceNode::CanInterfaceNode(const ros::NodeHandle& node_handle)
     command_file_stream_.open(command_file_name_);
     if (command_file_stream_)
     {
-      ROS_INFO_STREAM("reading from file '" << command_file_name_ << "'");
+      SPDLOG_ROS_INFO_STREAM("reading from file '" << command_file_name_ << "'");
 
       command_timer_ = node_handle_.createTimer(command_interval_, &CanInterfaceNode::processNextCommand, this);
     }
     else
     {
-      ROS_ERROR_STREAM("file '" << command_file_name_ << "' could not be opened for reading");
+      SPDLOG_ROS_ERROR_STREAM("file '" << command_file_name_ << "' could not be opened for reading");
     }
   }
 
@@ -57,14 +63,14 @@ CanInterfaceNode::CanInterfaceNode(const ros::NodeHandle& node_handle)
 
 void CanInterfaceNode::transmitCanMessage(const arti_can_msgs::CanMessageConstPtr& can_message)
 {
-  ROS_INFO_STREAM("transmitting CAN message: " << CanMessageFormatter(*can_message));
+  SPDLOG_ROS_INFO_STREAM("transmitting CAN message: " << CanMessageFormatter(*can_message));
   can_interface_->sendMessage(can_message);
   dump(DIRECTION_TX, *can_message);
 }
 
 void CanInterfaceNode::processReceivedCanMessage(const arti_can_msgs::CanMessageConstPtr& can_message)
 {
-  ROS_INFO_STREAM("received CAN message: " << CanMessageFormatter(*can_message));
+  SPDLOG_ROS_INFO_STREAM("received CAN message: " << CanMessageFormatter(*can_message));
   can_message_publisher_.publish(can_message);
   dump(DIRECTION_RX, *can_message);
 }
@@ -99,11 +105,11 @@ void CanInterfaceNode::processNextCommand(const ros::TimerEvent& /*timer_event*/
     command_timer_.stop();
     if (command_file_stream_.eof())
     {
-      ROS_INFO_STREAM("finished executing commands");
+      SPDLOG_ROS_INFO_STREAM("finished executing commands");
     }
     else
     {
-      ROS_WARN_STREAM("error reading command file");
+      SPDLOG_ROS_WARN_STREAM("error reading command file");
     }
   }
 }
@@ -128,7 +134,7 @@ void CanInterfaceNode::processCommand(const std::string& command)
       const unsigned long value = std::stoul(item, &end_index, 0);
       if (end_index != item.size())
       {
-        ROS_WARN_STREAM("invalid line in command file: string cannot be parsed as a number: '" << item << "'");
+        SPDLOG_ROS_WARN_STREAM("invalid line in command file: string cannot be parsed as a number: '" << item << "'");
         valid = false;
       }
       else if (i == 1)
@@ -139,7 +145,7 @@ void CanInterfaceNode::processCommand(const std::string& command)
         }
         else
         {
-          ROS_WARN_STREAM("invalid line in command file: ID (second value in line) must be between 0 and 0x7ff, but"
+          SPDLOG_ROS_WARN_STREAM("invalid line in command file: ID (second value in line) must be between 0 and 0x7ff, but"
                           " is 0x" << std::hex << value);
           valid = false;
         }
@@ -152,7 +158,7 @@ void CanInterfaceNode::processCommand(const std::string& command)
         }
         else
         {
-          ROS_WARN_STREAM("invalid line in command file: data (third and following values in line) must be between 0"
+          SPDLOG_ROS_WARN_STREAM("invalid line in command file: data (third and following values in line) must be between 0"
                           " and 0xff, but is 0x" << std::hex << value);
           valid = false;
         }
@@ -173,7 +179,7 @@ void CanInterfaceNode::processCommand(const std::string& command)
     }
     else
     {
-      ROS_WARN_STREAM("invalid line in command file: direction (first value in line) must be"
+      SPDLOG_ROS_WARN_STREAM("invalid line in command file: direction (first value in line) must be"
                       " either '" << DIRECTION_RX << "' or '" << DIRECTION_TX << "', but is '" << direction << "'");
     }
   }
