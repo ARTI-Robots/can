@@ -44,7 +44,7 @@ void LelyCanInterface::sendMessage(const arti_can_msgs::CanMessage& can_message)
   can_msg internal_can_message = convertToInternalCanMsg(can_message);
   try
   {
-    SPDLOG_ROS_DEBUG_STREAM("CanInterface: sendMessage");// previously: ROS_DEBUG_STREAM_NAMED()
+    SPDLOG_ROS_DEBUG_STREAM_NAMED("CanInterface", "sendMessage");// previously: ROS_DEBUG_STREAM_NAMED()
     can_channel_.write(internal_can_message);
   }
   catch (const std::exception& exp)
@@ -94,20 +94,20 @@ void LelyCanInterface::runReadThread()
 {
   while (should_read_)
   {
-    SPDLOG_ROS_DEBUG_STREAM("CanInterface: runReadThread 1");// previously: ROS_DEBUG_STREAM_NAMED()
+    SPDLOG_ROS_DEBUG_STREAM_NAMED("CanInterface", "runReadThread 1");// previously: ROS_DEBUG_STREAM_NAMED()
     can_msg internal_can_message = CAN_MSG_INIT;
     can_err internal_can_error = CAN_ERR_INIT;
     try
     {
-      SPDLOG_ROS_DEBUG_STREAM("CanInterface: ==========================================");// previously: ROS_DEBUG_STREAM_NAMED()
-      SPDLOG_ROS_DEBUG_STREAM("CanInterface: read frame async");// previously: ROS_DEBUG_STREAM_NAMED()
+      SPDLOG_ROS_DEBUG_STREAM_NAMED("CanInterface", "==========================================");// previously: ROS_DEBUG_STREAM_NAMED()
+      SPDLOG_ROS_DEBUG_STREAM_NAMED("CanInterface", "read frame async");// previously: ROS_DEBUG_STREAM_NAMED()
       std::unique_lock<std::mutex> lock(notify_read_mutex_);
       got_frame_ = false;
       //can_channel_.read(&internal_can_message, &internal_can_error);
       can_channel_.submit_read(&internal_can_message, &internal_can_error, nullptr,
                                std::bind(&LelyCanInterface::notifyReadResult, this, std::placeholders::_1,
                                          std::placeholders::_2));
-      SPDLOG_ROS_DEBUG_STREAM("CanInterface: wait for result frame async");// previously: ROS_DEBUG_STREAM_NAMED()
+      SPDLOG_ROS_DEBUG_STREAM_NAMED("CanInterface", "wait for result frame async");// previously: ROS_DEBUG_STREAM_NAMED()
       while (!got_frame_ && should_read_)
       {
         notify_read_condition_.wait(lock);
@@ -117,26 +117,26 @@ void LelyCanInterface::runReadThread()
         break;
       }
 
-      SPDLOG_ROS_DEBUG_STREAM("CanInterface: don reading frame");// previously: ROS_DEBUG_STREAM_NAMED()
-      SPDLOG_ROS_DEBUG_STREAM("CanInterface: ******************************************");// previously: ROS_DEBUG_STREAM_NAMED()
+      SPDLOG_ROS_DEBUG_STREAM_NAMED("CanInterface", "don reading frame");// previously: ROS_DEBUG_STREAM_NAMED()
+      SPDLOG_ROS_DEBUG_STREAM_NAMED("CanInterface", "******************************************");// previously: ROS_DEBUG_STREAM_NAMED()
     }
     catch (const std::exception& ex)
     {
-      SPDLOG_ROS_ERROR_STREAM("CanInterface: an error occurred in the read loop, exiting read loop: " << ex.what());// previously: ROS_ERROR_STREAM_NAMED()
+      SPDLOG_ROS_ERROR_STREAM_NAMED("CanInterface", "an error occurred in the read loop, exiting read loop: " << ex.what());// previously: ROS_ERROR_STREAM_NAMED()
       throw ex;
     }
-    SPDLOG_ROS_DEBUG_STREAM("CanInterface: runReadThread 2");// previously: ROS_DEBUG_STREAM_NAMED()
-    SPDLOG_ROS_DEBUG_STREAM("CanInterface: "
+    SPDLOG_ROS_DEBUG_STREAM_NAMED("CanInterface", "runReadThread 2");// previously: ROS_DEBUG_STREAM_NAMED()
+    SPDLOG_ROS_DEBUG_STREAM_NAMED("CanInterface",
                            "internal_can_message: id: " << static_cast<int>(internal_can_message.id) << " flags: "
                                                         << static_cast<int>(internal_can_message.flags) << " len: "
                                                         << static_cast<int>(internal_can_message.len) << " data:");// previously: ROS_DEBUG_STREAM_NAMED()
     for (size_t i = 0; i < internal_can_message.len; ++i)
     {
-      SPDLOG_ROS_DEBUG_STREAM("CanInterface: byte[" << i << "]" << static_cast<int>(internal_can_message.data[i]));// previously: ROS_DEBUG_STREAM_NAMED()
+      SPDLOG_ROS_DEBUG_STREAM_NAMED("CanInterface", "byte[" << i << "]" << static_cast<int>(internal_can_message.data[i]));// previously: ROS_DEBUG_STREAM_NAMED()
     }
 
     const arti_can_msgs::CanMessageConstPtr can_message = convertToCanMessage(internal_can_message);
-    SPDLOG_ROS_DEBUG_STREAM("CanInterface: received CAN message: " << CanMessageFormatter(*can_message));// previously: ROS_DEBUG_STREAM_NAMED()
+    SPDLOG_ROS_DEBUG_STREAM_NAMED("CanInterface", "received CAN message: " << CanMessageFormatter(*can_message));// previously: ROS_DEBUG_STREAM_NAMED()
 
     dispatchReceivedCanMessage(can_message);
   }
@@ -146,7 +146,7 @@ void LelyCanInterface::notifyReadResult(int can_receive_result, const std::error
 {
   std::unique_lock<std::mutex> lock(notify_read_mutex_);
 
-  SPDLOG_ROS_DEBUG_STREAM("CanInterface: "
+  SPDLOG_ROS_DEBUG_STREAM_NAMED("CanInterface",
                          "received a frame with receiving info: " << can_receive_result << " and error code: " << ec);// previously: ROS_DEBUG_STREAM_NAMED()
 
   got_frame_ = true;
